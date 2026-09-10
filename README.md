@@ -94,6 +94,32 @@ npm run build   # tsc emits lib/
 npm test        # node test/logic.test.mjs (needs build first)
 ```
 
+### A note on the peer range
+
+```
+>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0
+```
+
+Every dsh release published today is a **prerelease**, and a semver comparator admits
+prereleases only when they share its own `major.minor.patch` tuple. That makes two forms
+wrong, and both have to be avoided:
+
+```jsonc
+// Matches nothing at all: 0.1.2-rc.1 sorts below 0.1.2, and every other
+// prerelease has a different tuple.  -> ETARGET, the package cannot be installed.
+">=0.1.2"
+
+// Only 0.1.2-rc.1: a user on the 0.1.5 line gets ERESOLVE.
+">=0.1.2-rc.1 <0.2.0"
+
+// What we ship: one comparator per supported tuple line.
+">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0"
+```
+
+The npm `latest` tag for `@deepseek-ai/dsh` is on the `0.1.2` line while `next`/`alpha`
+point at `0.1.5`, so both comparators are needed. `test/peer-range.test.mjs` fails if
+either bad form comes back.
+
 ## License
 
 MIT
