@@ -96,30 +96,69 @@ npm test        # node test/logic.test.mjs (needs build first)
 
 ### A note on the peer range
 
+This package declares every dsh package it reads as a peer, all with the same
+range:
+
+```
+>=0.1.2-rc.1 <0.1.3 || >=0.1.3-alpha.2 <0.1.4 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-alpha.1 <0.2.0
+```
+
+Every dsh release published today is a **prerelease** (`0.1.2-rc.1`, `0.1.5-alpha.1`,
+`0.1.6-alpha.2`, …), and a semver comparator admits a prerelease only when some
+comparator **in the same group** shares its `major.minor.patch` tuple. Two
+consequences follow, and both have already bitten this package:
+
+```jsonc
+// Matches nothing: 0.1.2-rc.1 sorts BELOW 0.1.2, and every other prerelease
+// carries a different tuple.  -> ETARGET, the package cannot be installed.
+">=0.1.2"
+
+// Only the 0.1.2-rc tuple. The `<0.2.0` upper bound is INERT for prereleases:
+// it excludes no later line, so every other line gets ERESOLVE.
+">=0.1.2-rc.1 <0.2.0"
+```
+
+The second form is the dangerous one, because it *reads* as though it covered
+everything from `0.1.2-rc.1` onward. It does not — `<0.2.0` never excludes
+`0.1.6-alpha.2`, and no comparator names that tuple. Up to **v0.1.1** the
+shipped range was
+
 ```
 >=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0
 ```
 
-Every dsh release published today is a **prerelease**, and a semver comparator admits
-prereleases only when they share its own `major.minor.patch` tuple. That makes two forms
-wrong, and both have to be avoided:
+which admitted the `0.1.2-rc` and `0.1.5` tuples and **nothing else** — 5 of the
+23 published versions. A user on the newest shipped dsh release
+(`0.1.6-alpha.2`) therefore could not install the plugin at all:
 
-```jsonc
-// Matches nothing at all: 0.1.2-rc.1 sorts below 0.1.2, and every other
-// prerelease has a different tuple.  -> ETARGET, the package cannot be installed.
-">=0.1.2"
-
-// Only 0.1.2-rc.1: a user on the 0.1.5 line gets ERESOLVE.
-">=0.1.2-rc.1 <0.2.0"
-
-// What we ship: one comparator per supported tuple line.
-">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0"
+```
+npm error ERESOLVE unable to resolve dependency tree
+npm error peer @deepseek-ai/dsh-llm@">=0.1.2-rc.1 <0.2.0 || ..." from
+npm error   @argszero/cordis-plugin-schedule-cron@0.1.1
 ```
 
-The npm `latest` tag for `@deepseek-ai/dsh` is on the `0.1.2` line while `next`/`alpha`
-point at `0.1.5`, so both comparators are needed. `test/peer-range.test.mjs` fails if
-either bad form comes back.
+The plugin's own suite passes on that line (7/7). The dsh packages are
+**peers**, so `--legacy-peer-deps` is not something a consumer can reasonably be
+asked to accept: the install simply fails.
 
+**What we ship:** one comparator per supported tuple, each with its own upper
+bound so the intended span is legible rather than implied.
+
+| clause | admits |
+| --- | --- |
+| `>=0.1.2-rc.1 <0.1.3` | `0.1.2-rc.1` |
+| `>=0.1.3-alpha.2 <0.1.4` | `0.1.3-alpha.2` |
+| `>=0.1.5-alpha.1 <0.2.0` | the whole 0.1.5 line (alpha.1, alpha.2, rc.1, rc.2) |
+| `>=0.1.6-alpha.1 <0.2.0` | the whole 0.1.6 line (alpha.1, alpha.2) |
+
+`test/peer-range` **computes** the admitted set with the real `semver` package
+and asserts it equals exactly the set the suite has been run against — 8
+versions — rather than pattern-matching the range string. An earlier guard only
+checked that the string mentioned `0.1.2-rc.N` and `0.1.5-alpha.N`; that form
+cannot tell a correct range from an incorrect one, which is how the range above
+shipped green. Asserting the set exactly makes both directions loud: dropping a
+supported line fails, and admitting an unverified line fails too. The same file
+also asserts that this README quotes the manifest range verbatim.
 ## License
 
 MIT
