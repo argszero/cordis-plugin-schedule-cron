@@ -19,10 +19,12 @@ That is, it has:
 ## Install
 
 ```sh
-npm install @argszero/cordis-plugin-schedule-cron
+dsh plugin add @argszero/cordis-plugin-schedule-cron
 ```
 
-Then mount it into your `dsh` profile (a Cordis overlay). For example:
+`dsh plugin add` is what attaches a plugin: it registers the profile bundle.
+Installing the npm package alone leaves it unmounted. Then mount it into your
+`dsh` profile (a Cordis overlay). For example:
 
 ```yaml
 # cordis.yml fragment
@@ -46,7 +48,7 @@ plugins:
 On a tick (`tickMs`, default `60_000`), the plugin checks each rule. When a rule is due:
 
 1. `ctx.agents.create({ sessionId, meta, agentOptions })` composes a **fresh agent** (a brand new session) — the same primitive the ACP bridge uses for non-interactive sessions.
-2. `agent.followup(createUserMessage({ content: [{ type: 'text', text: task }], source: { kind: 'plugin', plugin: 'schedule-cron' } }))` drives its first turn **autonomously**.
+2. `agent.followup(createUserMessage({ content: [{ type: 'text', text: task }], source: { kind: 'schedule-cron', plugin: 'schedule-cron' } }))` drives its first turn **autonomously**.
 
 The fire uses a **monotonic per-rule cursor** (`croner`), so:
 - Each occurrence fires exactly once.
@@ -100,7 +102,7 @@ This package declares every dsh package it reads as a peer, all with the same
 range:
 
 ```
->=0.1.2-rc.1 <0.1.3 || >=0.1.3-alpha.2 <0.1.4 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-alpha.1 <0.2.0
+>=0.1.2-rc.1 <0.1.3 || >=0.1.3-alpha.2 <0.1.4 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-alpha.1 <0.2.0 || >=0.2.1-rc.1 <0.2.1
 ```
 
 Every dsh release published today is a **prerelease** (`0.1.2-rc.1`, `0.1.5-alpha.1`,
@@ -150,9 +152,10 @@ bound so the intended span is legible rather than implied.
 | `>=0.1.3-alpha.2 <0.1.4` | `0.1.3-alpha.2` |
 | `>=0.1.5-alpha.1 <0.2.0` | the whole 0.1.5 line (alpha.1, alpha.2, rc.1, rc.2) |
 | `>=0.1.6-alpha.1 <0.2.0` | the whole 0.1.6 line (alpha.1, alpha.2) |
+| `>=0.2.1-rc.1 <0.2.1` | the whole 0.2.1 line (rc.1, rc.2, rc.3) |
 
 `test/peer-range` **computes** the admitted set with the real `semver` package
-and asserts it equals exactly the set the suite has been run against — 8
+and asserts it equals exactly the set the suite has been run against — 11
 versions — rather than pattern-matching the range string. An earlier guard only
 checked that the string mentioned `0.1.2-rc.N` and `0.1.5-alpha.N`; that form
 cannot tell a correct range from an incorrect one, which is how the range above

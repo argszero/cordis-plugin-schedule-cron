@@ -25,6 +25,24 @@ import {
 } from './engine.js'
 import type { ScheduleCronConfig } from './types.js'
 
+/**
+ * The durable source kind this plugin stamps on every message it fires.
+ *
+ * `MessageSourceMap` is merge-extensible and its base entry declares no shared
+ * catch-all `plugin` kind: each producer names its own, which is why the map is
+ * augmented here rather than a literal being bent to fit the union. The bare
+ * `form` arm is deliberate - a fired task is the instruction the run acts on,
+ * not a one-line notice about something else.
+ */
+declare module '@deepseek-ai/dsh-llm' {
+  interface MessageSourceMap {
+    'schedule-cron': {
+      kind: 'schedule-cron'
+      plugin?: string
+    }
+  }
+}
+
 export type * from './types.js'
 export { collectDue, initialCursor, resumeCursor, ruleIdOf, normalizeExpression } from './engine.js'
 export type { CronCursor, DueFire } from './engine.js'
@@ -75,7 +93,7 @@ export function apply(ctx: Context, config: ScheduleCronConfig): void {
     })
     const message = createUserMessage({
       content: [{ type: 'text', text: rule.task }],
-      source: { kind: 'plugin', plugin: 'schedule-cron' },
+      source: { kind: 'schedule-cron', plugin: 'schedule-cron' },
     })
     // Commit the fire to the durable log even if the turn errors.
     handle.agent.followup(message)

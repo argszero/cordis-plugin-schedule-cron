@@ -19,6 +19,9 @@ const PUBLISHED_23 = [
   '0.1.1-rc.2', '0.1.2-alpha.2', '0.1.2-alpha.3', '0.1.2-alpha.4', '0.1.2-alpha.5',
   '0.1.2-rc.1', '0.1.3-alpha.2', '0.1.5-alpha.1', '0.1.5-alpha.2', '0.1.5-rc.1',
   '0.1.5-rc.2', '0.1.6-alpha.1', '0.1.6-alpha.2',
+  '0.2.0-rc.1', '0.2.0-rc.2',
+  '0.2.1-alpha.1', '0.2.1-alpha.2', '0.2.1-alpha.3', '0.2.1-alpha.4',
+  '0.2.1-alpha.5', '0.2.1-rc.1', '0.2.1-rc.2', '0.2.1-rc.3',
 ]
 
 /** dsh-home-paths and dsh-jobs were first published one tuple later. */
@@ -53,6 +56,7 @@ const SUPPORTED = [
   '0.1.3-alpha.2',
   '0.1.5-alpha.1', '0.1.5-alpha.2', '0.1.5-rc.1', '0.1.5-rc.2',
   '0.1.6-alpha.1', '0.1.6-alpha.2',
+  '0.2.1-rc.1', '0.2.1-rc.2', '0.2.1-rc.3',
 ]
 
 /**
@@ -129,7 +133,7 @@ test('the newest shipped dsh line is admitted', () => {
   // on the newest dsh could not install the plugin at all.
   const deps = Object.keys(pkg.peerDependencies).filter((d) => d.startsWith('@deepseek-ai/dsh-'))
   for (const dep of deps) {
-    for (const line of ['0.1.6-alpha.1', '0.1.6-alpha.2']) {
+    for (const line of ['0.2.1-rc.1', '0.2.1-rc.2', '0.2.1-rc.3']) {
       assert.equal(
         satisfies(line, pkg.peerDependencies[dep]),
         true,
