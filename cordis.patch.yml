@@ -1,0 +1,31 @@
+# The @argszero/cordis-plugin-schedule-cron bundle patch.
+#
+# It mounts with no deployment-specific config: with no `cron` rules the plugin
+# registers its tick timer and fires nothing, which is the safe default for a
+# scheduler. Work begins when a rule is added, either through a profile layer
+# (below) or by passing `initialState` to restore cursors across a restart.
+#
+# A rule names a standard 5-field cron expression and the task to run:
+#
+#   - set:
+#       - id: schedule-cron
+#         config:
+#           tickMs: 60000              # how often to check for due rules
+#           cron:
+#             - id: daily-triage
+#               expression: "0 9 * * 1-5"
+#               task: "Review the open issues and summarize anything urgent."
+#               provider: deepseek     # optional
+#               model: deepseek-chat   # optional
+#               cwd: /path/to/workspace # optional
+#               enabled: true          # optional
+#
+# Each fire spawns a **fresh agent run** rather than messaging a live session,
+# so scheduled work happens with no browser session open.
+#
+# Inside a bundle whose patch already has rows, add the same `insert` entry
+# instead of a second document.
+
+- insert:
+    - id: schedule-cron
+      name: '@argszero/cordis-plugin-schedule-cron'
